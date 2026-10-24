@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="StudySprint helps students organize school tasks, track deadlines, practice quizzes, and focus during study sessions." />
+  <title>StudySprint | Student Academic Survival Hub</title>
+  <style>
+    :root {
+      --navy: #14213d;
+      --blue: #3563e9;
+      --blue-dark: #2449b7;
+      --pale: #eef3ff;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --green: #15803d;
+      --red: #b91c1c;
+      --amber: #b45309;
+      --shadow: 0 10px 28px rgba(20, 33, 61, .07);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; }
+    .topbar { background: var(--navy); color: white; padding: 17px 24px; display: flex; align-items: center; justify-content: space-between; gap: 18px; position: sticky; top: 0; z-index: 10; box-shadow: 0 4px 16px rgba(20,33,61,.15); }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.15rem; letter-spacing: -.03em; }
+    .brand-mark { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: #dbeafe; color: var(--blue-dark); font-weight: 900; }
+    .brand small { display: block; color: #cbd5e1; font-size: .72rem; font-weight: 500; letter-spacing: 0; margin-top: 2px; }
+    .topbar-note { font-size: .85rem; color: #dbeafe; }
+    .layout { max-width: 1240px; margin: 0 auto; padding: 28px 20px 50px; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 24px; }
+    .sidebar { align-self: start; position: sticky; top: 88px; background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 12px; box-shadow: var(--shadow); }
+    .nav-btn { border: 0; background: transparent; color: var(--muted); padding: 12px 13px; width: 100%; text-align: left; border-radius: 11px; display: flex; align-items: center; gap: 10px; margin: 2px 0; font-weight: 650; }
+    .nav-btn:hover { background: #f1f5f9; color: var(--navy); }
+    .nav-btn.active { background: var(--pale); color: var(--blue-dark); }
+    .nav-icon { width: 22px; text-align: center; font-size: 1.05rem; }
+    main { min-width: 0; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .welcome { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin: 4px 0 22px; }
+    h1 { font-size: clamp(1.7rem, 3vw, 2.25rem); line-height: 1.1; margin: 0 0 8px; letter-spacing: -.04em; color: var(--navy); }
+    h2 { font-size: 1.15rem; margin: 0 0 15px; color: var(--navy); }
+    h3 { margin: 0 0 8px; font-size: 1rem; }
+    p { line-height: 1.55; }
+    .muted { color: var(--muted); }
+    .date-pill { background: white; border: 1px solid var(--border); border-radius: 999px; padding: 9px 13px; color: var(--muted); font-size: .85rem; white-space: nowrap; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
+    .stat, .card { background: var(--card); border: 1px solid var(--border); border-radius: 17px; padding: 19px; box-shadow: var(--shadow); }
+    .stat-label { color: var(--muted); font-size: .82rem; font-weight: 650; }
+    .stat-value { font-size: 1.9rem; font-weight: 800; color: var(--navy); margin: 8px 0 3px; letter-spacing: -.04em; }
+    .stat-note { font-size: .78rem; color: var(--muted); }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, .7fr); gap: 18px; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 13px; }
+    .section-head h2 { margin: 0; }
+    .text-btn { border: 0; background: transparent; color: var(--blue); font-weight: 750; padding: 5px; }
+    .task-list { display: grid; gap: 10px; }
+    .task-row { border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; gap: 11px; align-items: flex-start; }
+    .task-check { width: 19px; height: 19px; margin-top: 3px; accent-color: var(--blue); flex-shrink: 0; }
+    .task-content { min-width: 0; flex: 1; }
+    .task-title { font-weight: 750; overflow-wrap: anywhere; }
+    .task-row.done .task-title { text-decoration: line-through; color: var(--muted); }
+    .task-meta { color: var(--muted); font-size: .79rem; margin-top: 5px; display: flex; flex-wrap: wrap; gap: 7px; }
+    .priority { font-size: .7rem; font-weight: 800; border-radius: 999px; padding: 3px 7px; }
+    .priority.High { background: #fee2e2; color: #991b1b; }
+    .priority.Medium { background: #fef3c7; color: #92400e; }
+    .priority.Low { background: #dcfce7; color: #166534; }
+    .task-actions { display: flex; gap: 5px; }
+    .icon-btn { border: 1px solid var(--border); background: white; color: var(--muted); border-radius: 8px; width: 32px; height: 32px; }
+    .icon-btn:hover { color: var(--blue); border-color: #bfdbfe; }
+    .empty { padding: 24px 12px; text-align: center; color: var(--muted); border: 1px dashed var(--border); border-radius: 12px; font-size: .9rem; }
+    .progress-wrap { height: 9px; border-radius: 99px; background: #e2e8f0; overflow: hidden; margin: 14px 0 8px; }
+    .progress-bar { height: 100%; width: 0; background: var(--blue); border-radius: 99px; transition: width .2s; }
+    .progress-caption { display: flex; justify-content: space-between; font-size: .82rem; color: var(--muted); }
+    .quick-links { display: grid; gap: 10px; }
+    .quick-link { padding: 13px; border: 1px solid var(--border); background: #fff; border-radius: 12px; display: flex; align-items: center; gap: 12px; text-align: left; }
+    .quick-link:hover { border-color: #bfdbfe; background: #f8faff; }
+    .quick-icon { display: grid; place-items: center; width: 38px; height: 38px; background: var(--pale); border-radius: 10px; font-size: 1.1rem; }
+    .quick-link strong { display: block; font-size: .9rem; color: var(--navy); }
+    .quick-link small { display: block; color: var(--muted); margin-top: 3px; }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .field { display: grid; gap: 6px; margin-bottom: 13px; }
+    label { color: #475569; font-size: .83rem; font-weight: 700; }
+    input, select { width: 100%; border: 1px solid #cbd5e1; background: white; color: var(--text); border-radius: 10px; padding: 11px 12px; outline: none; }
+    input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(53,99,233,.12); }
+    .search { max-width: 280px; }
+    .btn { border: 0; border-radius: 10px; padding: 11px 15px; background: var(--blue); color: white; font-weight: 750; }
+    .btn:hover { background: var(--blue-dark); }
+    .btn.secondary { background: white; border: 1px solid var(--border); color: var(--navy); }
+    .btn.secondary:hover { background: #f8fafc; }
+    .btn.danger { background: #fee2e2; color: #991b1b; }
+    .btn.small { padding: 7px 10px; font-size: .82rem; }
+    .two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .8fr); gap: 18px; align-items: start; }
+    .quiz-question { border: 1px solid var(--border); padding: 15px; border-radius: 13px; margin-bottom: 12px; }
+    .quiz-options { display: grid; gap: 8px; margin-top: 12px; }
+    .option { display: flex; gap: 9px; align-items: flex-start; padding: 10px; border: 1px solid var(--border); border-radius: 9px; cursor: pointer; font-weight: 500; }
+    .option input { width: auto; margin-top: 4px; }
+    .option:has(input:checked) { border-color: var(--blue); background: var(--pale); }
+    .result-box { border-radius: 12px; padding: 15px; background: #eff6ff; border: 1px solid #bfdbfe; margin-top: 14px; }
+    .result-score { font-size: 1.7rem; font-weight: 850; color: var(--blue-dark); }
+    .timer-card { text-align: center; padding: 32px 20px; }
+    .timer-circle { width: min(250px, 65vw); aspect-ratio: 1; border: 10px solid #dbeafe; border-top-color: var(--blue); border-radius: 50%; margin: 18px auto 22px; display: grid; place-items: center; }
+    .timer-display { font-size: clamp(2.4rem, 7vw, 3.5rem); font-weight: 850; color: var(--navy); font-variant-numeric: tabular-nums; letter-spacing: -.05em; }
+    .timer-controls { display: flex; justify-content: center; gap: 9px; flex-wrap: wrap; }
+    .timer-presets { display: flex; justify-content: center; gap: 8px; margin: 18px 0; flex-wrap: wrap; }
+    .preset { border: 1px solid var(--border); background: white; padding: 8px 12px; border-radius: 999px; color: var(--muted); font-weight: 700; }
+    .preset.active { background: var(--pale); color: var(--blue-dark); border-color: #bfdbfe; }
+    .policy h3 { margin-top: 18px; }
+    .notice { padding: 12px 14px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e; font-size: .85rem; margin-top: 15px; }
+    .footer { text-align: center; color: var(--muted); font-size: .78rem; padding: 28px 0 0; }
+    .toast { position: fixed; bottom: 20px; right: 20px; background: var(--navy); color: white; padding: 12px 16px; border-radius: 11px; box-shadow: var(--shadow); z-index: 99; display: none; max-width: calc(100vw - 40px); }
+    .toast.show { display: block; }
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 50; padding: 20px; align-items: center; justify-content: center; }
+    .modal-backdrop.show { display: flex; }
+    .modal { background: white; width: min(500px, 100%); border-radius: 17px; padding: 22px; box-shadow: 0 25px 70px rgba(15,23,42,.25); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+    .modal-head h2 { margin: 0; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    @media (max-width: 950px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; display: flex; overflow-x: auto; gap: 4px; }
+      .nav-btn { width: auto; white-space: nowrap; }
+      .stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 680px) {
+      .topbar { padding: 13px 16px; }
+      .topbar-note { display: none; }
+      .layout { padding: 19px 13px 35px; gap: 15px; }
+      .dashboard-grid, .two-col { grid-template-columns: 1fr; }
+      .welcome { display: block; }
+      .date-pill { display: inline-block; margin-top: 8px; }
+      .stat, .card { padding: 15px; }
+      .task-row { padding: 10px; }
+      .search { max-width: none; flex: 1; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">S</div><div>StudySprint<small>Student Academic Survival Hub</small></div></div>
+    <div class="topbar-note">Plan smarter. Study better. Finish on time.</div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="Main navigation">
+      <button class="nav-btn active" data-page="dashboard"><span class="nav-icon">▦</span> Dashboard</button>
+      <button class="nav-btn" data-page="tasks"><span class="nav-icon">☑</span> My Tasks</button>
+      <button class="nav-btn" data-page="quiz"><span class="nav-icon">✎</span> Quick Quiz</button>
+      <button class="nav-btn" data-page="timer"><span class="nav-icon">◷</span> Focus Timer</button>
+      <button class="nav-btn" data-page="privacy"><span class="nav-icon">♧</span> Privacy Policy</button>
+    </nav>
+
+    <main>
+      <section class="page active" id="page-dashboard">
+        <div class="welcome">
+          <div><h1>Let's make progress.</h1><p class="muted" style="margin:0">A little planning today can make schoolwork easier tomorrow.</p></div>
+          <div class="date-pill" id="todayLabel"></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="stat-label">Total tasks</div><div class="stat-value" id="statTotal">0</div><div class="stat-note">All your requirements</div></div>
+          <div class="stat"><div class="stat-label">Completed</div><div class="stat-value" id="statDone">0</div><div class="stat-note">Tasks finished</div></div>
+          <div class="stat"><div class="stat-label">Due soon</div><div class="stat-value" id="statSoon">0</div><div class="stat-note">Due in the next 3 days</div></div>
+          <div class="stat"><div class="stat-label">Overdue</div><div class="stat-value" id="statOverdue">0</div><div class="stat-note">Needs your attention</div></div>
+        </div>
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="section-head"><h2>Upcoming tasks</h2><button class="text-btn" data-goto="tasks">View all →</button></div>
+            <div id="dashboardTasks" class="task-list"></div>
+            <div style="margin-top:20px">
+              <div class="progress-caption"><span>Overall task progress</span><strong id="progressText">0%</strong></div>
+              <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Quick actions</h2>
+            <div class="quick-links">
+              <button class="quick-link" id="quickAdd"><span class="quick-icon">＋</span><span><strong>Add a school task</strong><small>Keep a deadline in one place</small></span></button>
+              <button class="quick-link" data-goto="quiz"><span class="quick-icon">✎</span><span><strong>Practice a quick quiz</strong><small>Check what you remember</small></span></button>
+              <button class="quick-link" data-goto="timer"><span class="quick-icon">◷</span><span><strong>Start a focus session</strong><small>Make time for studying</small></span></button>
+            </div>
+            <div class="notice">Your task data is saved in this browser using local storage. It is not synced to other devices.</div>
+          </div>
+        </div>
+        <div class="footer">Made for students • StudySprint</div>
+      </section>
+
+      <section class="page" id="page-tasks">
+        <div class="welcome"><div><h1>My Tasks</h1><p class="muted" style="margin:0">Add school requirements and keep track of what needs to be done.</p></div><button class="btn" id="addTaskBtn">＋ Add task</button></div>
+        <div class="toolbar">
+          <input class="search" id="taskSearch" type="search" placeholder="Search tasks..." aria-label="Search tasks"/>
+          <select id="taskFilter" aria-label="Filter tasks" style="max-width:190px"><option value="all">All tasks</option><option value="active">Pending</option><option value="done">Completed</option><option value="overdue">Overdue</option></select>
+          <select id="subjectFilter" aria-label="Filter by subject" style="max-width:190px"><option value="all">All subjects</option><option>Mathematics</option><option>Programming</option><option>Computer Hardware</option><option>Networking</option><option>Other</option></select>
+        </div>
+        <div class="card"><div id="allTasks" class="task-list"></div></div>
+      </section>
+
+      <section class="page" id="page-quiz">
+        <div class="welcome"><div><h1>Quick Quiz Reviewer</h1><p class="muted" style="margin:0">Practice a few basics and check your answers instantly.</p></div></div>
+        <div class="two-col">
+          <div class="card">
+            <h2>Computer and technology basics</h2>
+            <form id="quizForm">
+              <div id="quizQuestions"></div>
+              <button class="btn" type="submit">Submit answers</button>
+              <button class="btn secondary" type="button" id="resetQuiz">Try again</button>
+            </form>
+            <div id="quizResult" aria-live="polite"></div>
+          </div>
+          <div class="card">
+            <h2>Your practice record</h2>
+            <div class="stat-value" id="bestScore">—</div>
+            <p class="muted">Best score saved in this browser.</p>
+            <div class="progress-wrap"><div class="progress-bar" id="quizProgress"></div></div>
+            <p class="muted" style="font-size:.86rem">Tip: Read each question carefully. After submitting, review the correct answers and try again to improve your score.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-timer">
+        <div class="welcome"><div><h1>Focus Timer</h1><p class="muted" style="margin:0">Choose a session length and give one task your attention.</p></div></div>
+        <div class="two-col">
+          <div class="card timer-card">
+            <h2 id="timerMode">Study session</h2>
+            <div class="timer-circle"><div class="timer-display" id="timerDisplay">25:00</div></div>
+            <div class="timer-controls"><button class="btn" id="timerStart">Start</button><button class="btn secondary" id="timerPause" disabled>Pause</button><button class="btn secondary" id="timerReset">Reset</button></div>
+            <div class="timer-presets"><button class="preset active" data-minutes="25" data-mode="Study session">25 min study</button><button class="preset" data-minutes="5" data-mode="Short break">5 min break</button><button class="preset" data-minutes="15" data-mode="Longer focus">15 min focus</button></div>
+            <p class="muted" id="timerMessage">Ready when you are. Press Start to begin.</p>
+          </div>
+          <div class="card">
+            <h2>Simple focus tips</h2>
+            <div class="task-list">
+              <div class="task-row"><span class="quick-icon">1</span><div><strong>Choose one task</strong><div class="muted" style="font-size:.85rem">Avoid switching between subjects during a focus session.</div></div></div>
+              <div class="task-row"><span class="quick-icon">2</span><div><strong>Reduce distractions</strong><div class="muted" style="font-size:.85rem">Silence unnecessary notifications and close unrelated tabs.</div></div></div>
+              <div class="task-row"><span class="quick-icon">3</span><div><strong>Take a break</strong><div class="muted" style="font-size:.85rem">Rest briefly between study sessions when needed.</div></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-privacy">
+        <div class="welcome"><div><h1>Privacy Policy</h1><p class="muted" style="margin:0">Last updated: October 25, 2026</p></div></div>
+        <div class="card policy">
+          <p>This Privacy Policy explains how StudySprint handles information when you use this website. StudySprint is a student project created for educational purposes.</p>
+          <h3>1. Information collected</h3>
+          <p>StudySprint does not ask you to create an account and does not intentionally send your task details, quiz answers, or study activity to a server. Tasks and quiz records that you save are stored locally in your browser using local storage.</p>
+          <h3>2. How information is used</h3>
+          <p>Information saved in local storage is used only to display your tasks, progress, and quiz record within this browser. The website does not include analytics, advertising trackers, or a remote database in this version.</p>
+          <h3>3. Storage, sharing, and deletion</h3>
+          <p>Locally stored information is not automatically synced to another browser or device. Anyone with access to your browser profile may be able to view the saved information. You can remove it by deleting tasks within the app or clearing this website's local storage through your browser settings.</p>
+          <h3>4. Security and limitations</h3>
+          <p>Local storage is convenient for a demonstration project but is not designed for sensitive or confidential information. Do not enter passwords, private records, or other sensitive data into StudySprint.</p>
+          <h3>5. Third-party services</h3>
+          <p>The website's core features run in your browser. The public hosting provider may process basic technical information when you visit the deployed website, according to that provider's own policies.</p>
+          <h3>6. Contact</h3>
+          <p>For questions about this student project or its privacy practices, contact the student developer through the contact method provided by your course instructor. No contact details are collected by this website.</p>
+          <div class="notice">Before publishing, review this policy and update it if you add accounts, analytics, a database, or other third-party services.</div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="taskModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-head"><h2 id="modalTitle">Add a task</h2><button class="icon-btn" id="closeModal" aria-label="Close">✕</button></div>
+    <form id="taskForm">
+      <input type="hidden" id="taskId"/>
+      <div class="field"><label for="taskTitle">Task name *</label><input id="taskTitle" maxlength="100" required placeholder="e.g. Calculus problem set"/></div>
+      <div class="field"><label for="taskSubject">Subject</label><select id="taskSubject"><option>Mathematics</option><option>Programming</option><option>Computer Hardware</option><option>Networking</option><option>Other</option></select></div>
+      <div class="field"><label for="taskDue">Due date *</label><input id="taskDue" type="date" required/></div>
+      <div class="field"><label for="taskPriority">Priority</label><select id="taskPriority"><option>Medium</option><option>High</option><option>Low</option></select></div>
+      <div class="form-actions"><button class="btn secondary" type="button" id="cancelModal">Cancel</button><button class="btn" type="submit">Save task</button></div>
+    </form>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+  const STORAGE_KEY = "studysprint_tasks_v1";
+  const BEST_KEY = "studysprint_best_quiz_v1";
+  const $ = (selector) => document.querySelector(selector);
+  const $$ = (selector) => [...document.querySelectorAll(selector)];
+  let tasks = loadTasks();
+  let toastTimeout;
+  let timerInterval = null;
+  let timerSeconds = 25 * 60;
+  let timerRemaining = timerSeconds;
+  let timerRunning = false;
+
+  function loadTasks() {
+    try {
+      const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      return Array.isArray(value) ? value : [];
+    } catch { return []; }
+  }
+  function saveTasks() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    renderAll();
+  }
+  function localDateString(date = new Date()) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  function formatDate(dateString) {
+    if (!dateString) return "No due date";
+    const [y,m,d] = dateString.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+  function daysUntil(dateString) {
+    const target = new Date(`${dateString}T00:00:00`);
+    const today = new Date(`${localDateString()}T00:00:00`);
+    return Math.round((target - today) / 86400000);
+  }
+  function isOverdue(task) { return !task.done && task.due < localDateString(); }
+  function isDueSoon(task) { const n = daysUntil(task.due); return !task.done && n >= 0 && n <= 3; }
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
+  }
+  function showToast(message) {
+    const toast = $("#toast");
+    toast.textContent = message;
+    toast.classList.add("show");
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast.classList.remove("show"), 2600);
+  }
+  function switchPage(name) {
+    $$(".page").forEach(page => page.classList.toggle("active", page.id === `page-${name}`));
+    $$(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.page === name));
+    if (name === "tasks") renderTasks();
+    if (name === "quiz") updateBestScore();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function taskMarkup(task) {
+    const overdue = isOverdue(task);
+    const dueText = overdue ? `Overdue • ${formatDate(task.due)}` : task.due === localDateString() ? `Due today • ${formatDate(task.due)}` : formatDate(task.due);
+    return `<div class="task-row ${task.done ? "done" : ""}">
+      <input class="task-check" type="checkbox" aria-label="Mark ${escapeHtml(task.title)} completed" data-toggle="${task.id}" ${task.done ? "checked" : ""}/>
+      <div class="task-content"><div class="task-title">${escapeHtml(task.title)}</div>
+      <div class="task-meta"><span>${escapeHtml(task.subject)}</span><span>•</span><span>${escapeHtml(dueText)}</span><span class="priority ${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span></div></div>
+      <div class="task-actions"><button class="icon-btn" data-edit="${task.id}" aria-label="Edit task">✎</button><button class="icon-btn" data-delete="${task.id}" aria-label="Delete task">×</button></div>
+    </div>`;
+  }
+  function renderTaskList(container, list, emptyText) {
+    container.innerHTML = list.length ? list.map(taskMarkup).join("") : `<div class="empty">${emptyText}</div>`;
+  }
+  function renderDashboard() {
+    const sorted = [...tasks].filter(t => !t.done).sort((a,b) => a.due.localeCompare(b.due));
+    renderTaskList($("#dashboardTasks"), sorted.slice(0, 5), "You're all caught up! Add a task when you have a new requirement.");
+    const done = tasks.filter(t => t.done).length;
+    const soon = tasks.filter(isDueSoon).length;
+    const overdue = tasks.filter(isOverdue).length;
+    $("#statTotal").textContent = tasks.length;
+    $("#statDone").textContent = done;
+    $("#statSoon").textContent = soon;
+    $("#statOverdue").textContent = overdue;
+    const percent = tasks.length ? Math.round(done / tasks.length * 100) : 0;
+    $("#progressText").textContent = `${percent}%`;
+    $("#progressBar").style.width = `${percent}%`;
+  }
+  function renderTasks() {
+    const query = $("#taskSearch").value.trim().toLowerCase();
+    const filter = $("#taskFilter").value;
+    const subject = $("#subjectFilter").value;
+    let list = [...tasks].sort((a,b) => a.due.localeCompare(b.due));
+    if (query) list = list.filter(t => `${t.title} ${t.subject}`.toLowerCase().includes(query));
+    if (subject !== "all") list = list.filter(t => t.subject === subject);
+    if (filter === "active") list = list.filter(t => !t.done);
+    if (filter === "done") list = list.filter(t => t.done);
+    if (filter === "overdue") list = list.filter(isOverdue);
+    renderTaskList($("#allTasks"), list, "No tasks match this view. Try changing your filters or add a task.");
+  }
+  function renderAll() { renderDashboard(); renderTasks(); }
+  function openTaskModal(task = null) {
+    $("#taskForm").reset();
+    $("#taskId").value = task ? task.id : "";
+    $("#modalTitle").textContent = task ? "Edit task" : "Add a task";
+    $("#taskTitle").value = task ? task.title : "";
+    $("#taskSubject").value = task ? task.subject : "Mathematics";
+    $("#taskDue").value = task ? task.due : localDateString();
+    $("#taskPriority").value = task ? task.priority : "Medium";
+    $("#taskModal").classList.add("show");
+    setTimeout(() => $("#taskTitle").focus(), 50);
+  }
+  function closeTaskModal() { $("#taskModal").classList.remove("show"); }
+  function handleTaskSubmit(event) {
+    event.preventDefault();
+    const title = $("#taskTitle").value.trim();
+    const due = $("#taskDue").value;
+    if (!title || !due) return showToast("Please enter a task name and due date.");
+    const id = $("#taskId").value;
+    const existing = tasks.find(t => t.id === id);
+    const item = {
+      id: id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+      title, due, subject: $("#taskSubject").value, priority: $("#taskPriority").value,
+      done: existing ? existing.done : false
+    };
+    if (existing) tasks = tasks.map(t => t.id === id ? item : t);
+    else tasks.push(item);
+    saveTasks();
+    closeTaskModal();
+    showToast(existing ? "Task updated." : "Task added.");
+  }
+  function handleTaskAction(event) {
+    const toggle = event.target.closest("[data-toggle]");
+    const edit = event.target.closest("[data-edit]");
+    const del = event.target.closest("[data-delete]");
+    if (toggle) {
+      tasks = tasks.map(t => t.id === toggle.dataset.toggle ? {...t, done: toggle.checked} : t);
+      saveTasks();
+      showToast(toggle.checked ? "Task marked complete." : "Task marked pending.");
+    } else if (edit) {
+      const task = tasks.find(t => t.id === edit.dataset.edit);
+      if (task) openTaskModal(task);
+    } else if (del) {
+      const task = tasks.find(t => t.id === del.dataset.delete);
+      if (task && confirm(`Delete "${task.title}"?`)) {
+        tasks = tasks.filter(t => t.id !== task.id);
+        saveTasks();
+        showToast("Task deleted.");
+      }
+    }
+  }
+
+  const quizData = [
+    { q: "Which component is often called the 'brain' of a computer?", options: ["RAM", "CPU", "SSD", "Power supply"], answer: 1, explain: "The CPU processes instructions and performs calculations." },
+    { q: "What does HTML mainly define in a web page?", options: ["Structure and content", "Internet speed", "Computer memory", "Electrical power"], answer: 0, explain: "HTML provides the structure and content of a web page." },
+    { q: "Which data is usually lost when RAM loses power?", options: ["Files on an SSD", "Printed documents", "Data held only in RAM", "Cloud files"], answer: 2, explain: "RAM is volatile memory, so its contents are lost when power is removed." },
+    { q: "What is the main purpose of a computer network?", options: ["Make every computer identical", "Connect devices to share data and resources", "Replace all software", "Increase monitor brightness"], answer: 1, explain: "Networks allow connected devices to communicate and share resources." },
+    { q: "Which language is commonly used to add interactivity to a website?", options: ["JavaScript", "JPEG", "HTTP", "PNG"], answer: 0, explain: "JavaScript is commonly used to add interactive behavior to websites." }
+  ];
+  function renderQuiz() {
+    $("#quizQuestions").innerHTML = quizData.map((q,i) => `<div class="quiz-question"><strong>${i+1}. ${escapeHtml(q.q)}</strong><div class="quiz-options">${q.options.map((opt,j) => `<label class="option"><input type="radio" name="q${i}" value="${j}" required/> <span>${escapeHtml(opt)}</span></label>`).join("")}</div></div>`).join("");
+  }
+  function updateBestScore() {
+    const best = Number(localStorage.getItem(BEST_KEY) || 0);
+    $("#bestScore").textContent = `${best}%`;
+    $("#quizProgress").style.width = `${best}%`;
+  }
+  $("#quizForm").addEventListener("submit", event => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    let score = 0;
+    quizData.forEach((q,i) => { if (Number(formData.get(`q${i}`)) === q.answer) score++; });
+    const percent = Math.round(score / quizData.length * 100);
+    const best = Math.max(percent, Number(localStorage.getItem(BEST_KEY) || 0));
+    localStorage.setItem(BEST_KEY, String(best));
+    $("#quizResult").innerHTML = `<div class="result-box"><div class="result-score">${score}/${quizData.length} (${percent}%)</div><strong>${percent === 100 ? "Excellent work!" : percent >= 60 ? "Good effort! Keep practicing." : "Keep learning and try again."}</strong><ol>${quizData.map((q,i) => `<li style="margin-top:9px">${Number(formData.get(`q${i}`)) === q.answer ? "✓" : "✗"} <strong>${escapeHtml(q.options[q.answer])}</strong><br><span class="muted">${escapeHtml(q.explain)}</span></li>`).join("")}</ol></div>`;
+    updateBestScore();
+    showToast("Quiz submitted. Your score has been saved.");
+  });
+  $("#resetQuiz").addEventListener("click", () => {
+    $("#quizForm").reset();
+    $("#quizResult").innerHTML = "";
+  });
+
+  function renderTimer() {
+    const mins = Math.floor(timerRemaining / 60);
+    const secs = timerRemaining % 60;
+    $("#timerDisplay").textContent = `${String(mins).padStart(2,"0")}:${String(secs).padStart(2,"0")}`;
+    $("#timerStart").disabled = timerRunning;
+    $("#timerPause").disabled = !timerRunning;
+  }
+  function stopTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerRunning = false;
+    renderTimer();
+  }
+  function startTimer() {
+    if (timerRunning) return;
+    if (timerRemaining <= 0) timerRemaining = timerSeconds;
+    timerRunning = true;
+    $("#timerMessage").textContent = "Focus on one task until the timer ends.";
+    renderTimer();
+    timerInterval = setInterval(() => {
+      timerRemaining--;
+      renderTimer();
+      if (timerRemaining <= 0) {
+        stopTimer();
+        $("#timerMessage").textContent = "Session complete! Take a short break if you need one.";
+        showToast("Focus session complete!");
+        try { if ("Notification" in window && Notification.permission === "granted") new Notification("StudySprint", {body:"Your focus session is complete!"}); } catch {}
+      }
+    }, 1000);
+  }
+  function resetTimer() {
+    stopTimer();
+    timerRemaining = timerSeconds;
+    $("#timerMessage").textContent = "Timer reset. Press Start when you're ready.";
+    renderTimer();
+  }
+  $("#timerStart").addEventListener("click", startTimer);
+  $("#timerPause").addEventListener("click", () => { stopTimer(); $("#timerMessage").textContent = "Paused. Continue when you're ready."; });
+  $("#timerReset").addEventListener("click", resetTimer);
+  $$(".preset").forEach(btn => btn.addEventListener("click", () => {
+    $$(".preset").forEach(b => b.classList.toggle("active", b === btn));
+    timerSeconds = Number(btn.dataset.minutes) * 60;
+    timerRemaining = timerSeconds;
+    stopTimer();
+    $("#timerMode").textContent = btn.dataset.mode;
+    $("#timerMessage").textContent = "Timer ready. Press Start to begin.";
+    renderTimer();
+  }));
+
+  $$(".nav-btn").forEach(btn => btn.addEventListener("click", () => switchPage(btn.dataset.page)));
+  $$("[data-goto]").forEach(btn => btn.addEventListener("click", () => switchPage(btn.dataset.goto)));
+  $("#addTaskBtn").addEventListener("click", () => openTaskModal());
+  $("#quickAdd").addEventListener("click", () => openTaskModal());
+  $("#closeModal").addEventListener("click", closeTaskModal);
+  $("#cancelModal").addEventListener("click", closeTaskModal);
+  $("#taskModal").addEventListener("click", e => { if (e.target === $("#taskModal")) closeTaskModal(); });
+  $("#taskForm").addEventListener("submit", handleTaskSubmit);
+  $("#allTasks").addEventListener("click", handleTaskAction);
+  $("#allTasks").addEventListener("change", handleTaskAction);
+  $("#dashboardTasks").addEventListener("click", handleTaskAction);
+  $("#dashboardTasks").addEventListener("change", handleTaskAction);
+  $("#taskSearch").addEventListener("input", renderTasks);
+  $("#taskFilter").addEventListener("change", renderTasks);
+  $("#subjectFilter").addEventListener("change", renderTasks);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeTaskModal(); });
+
+  $("#todayLabel").textContent = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+  renderQuiz();
+  updateBestScore();
+  renderAll();
+  renderTimer();
+})();
+</script>
+</body>
+</html>
